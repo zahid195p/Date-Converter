@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- PWA Meta Tags -->
+    <title>Date Toolkit</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Date Toolkit">
+    <meta name="theme-color" content="#4A90E2">
+    <link rel="apple-touch-icon" href="https://placehold.co/192x192/4A90E2/FFFFFF?text=Date">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .result-box {
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            border: 1px solid #e2e8f0;
+        }
+        .result-title {
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .result-value {
+            font-weight: 700;
+            color: #4A90E2;
+            font-size: 1.25rem;
+        }
+        .btn {
+            background-color: #4A90E2;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #357ABD;
+        }
+        .input-field {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 0.5rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+        }
+        #install-prompt {
+            display: none;
+            position: fixed;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+
+    <div class="max-w-2xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800">Date Toolkit</h1>
+            <p class="text-gray-500 mt-2">All your date calculation needs, available offline.</p>
+        </header>
+
+        <!-- Card 1: Date Duration Calculator -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Date Duration</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="startDate" class="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
+                    <input type="date" id="startDate" class="input-field">
+                </div>
+                <div>
+                    <label for="endDate" class="block text-sm font-medium text-gray-600 mb-1">End Date</label>
+                    <input type="date" id="endDate" class="input-field">
+                </div>
+            </div>
+            <button id="calculateDuration" class="btn mt-4 w-full">Calculate Duration</button>
+            <div id="durationResult" class="result-box hidden"></div>
+        </div>
+
+        <!-- Card 2: Add/Subtract Days -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Add / Subtract Days</h2>
+            <div>
+                <label for="baseDate" class="block text-sm font-medium text-gray-600 mb-1">Base Date</label>
+                <input type="date" id="baseDate" class="input-field">
+            </div>
+            <div class="mt-4">
+                <label for="days" class="block text-sm font-medium text-gray-600 mb-1">Days to Add/Subtract</label>
+                <input type="number" id="days" value="1" class="input-field">
+            </div>
+            <div class="flex space-x-4 mt-4">
+                <button id="addDays" class="btn flex-1">Add Days</button>
+                <button id="subtractDays" class="btn flex-1 bg-gray-600 hover:bg-gray-700">Subtract Days</button>
+            </div>
+            <div id="dateCalcResult" class="result-box hidden"></div>
+        </div>
+
+        <!-- Card 3: Day of the Year -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Day Details</h2>
+            <div>
+                <label for="detailDate" class="block text-sm font-medium text-gray-600 mb-1">Select Date</label>
+                <input type="date" id="detailDate" class="input-field">
+            </div>
+            <div id="detailResult" class="result-box hidden"></div>
+        </div>
+        
+        <!-- Install button for PWA -->
+        <div id="install-prompt">
+             <button id="install-button" class="btn bg-green-500 hover:bg-green-600 flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Install App</span>
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // Set default dates to today
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+            document.getElementById('endDate').value = today;
+            document.getElementById('baseDate').value = today;
+            document.getElementById('detailDate').value = today;
+
+            // Trigger initial calculation for Day Details
+            handleDetailDateChange();
+        });
+
+        // --- DURATION CALCULATION ---
+        document.getElementById('calculateDuration').addEventListener('click', () => {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const resultDiv = document.getElementById('durationResult');
+
+            if (!startDate || !endDate) {
+                resultDiv.innerHTML = `<p class="text-red-500">Please select both a start and end date.</p>`;
+                resultDiv.classList.remove('hidden');
+                return;
+            }
+
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            if (start > end) {
+                resultDiv.innerHTML = `<p class="text-red-500">Start date cannot be after the end date.</p>`;
+                resultDiv.classList.remove('hidden');
+                return;
+            }
+
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            // Adjust to be inclusive
+            const inclusiveDays = diffDays + 1;
+            const diffWeeks = (inclusiveDays / 7).toFixed(2);
+            
+            // Month calculation is tricky, this is an approximation
+            let diffMonths = (end.getFullYear() - start.getFullYear()) * 12;
+            diffMonths -= start.getMonth();
+            diffMonths += end.getMonth();
+            const monthResult = diffMonths <= 0 ? 0 : diffMonths;
+
+            resultDiv.innerHTML = `
+                <p class="result-title">Duration:</p>
+                <p><span class="result-value">${inclusiveDays.toLocaleString()}</span> Days</p>
+                <p><span class="result-value">${diffWeeks}</span> Weeks</p>
+                <p><span class="result-value">${monthResult}</span> Full Months (approx.)</p>
+            `;
+            resultDiv.classList.remove('hidden');
+        });
+
+        // --- ADD/SUBTRACT DAYS ---
+        const handleDateCalculation = (operation) => {
+            const baseDateStr = document.getElementById('baseDate').value;
+            const days = parseInt(document.getElementById('days').value, 10);
+            const resultDiv = document.getElementById('dateCalcResult');
+
+            if (!baseDateStr || isNaN(days)) {
+                resultDiv.innerHTML = `<p class="text-red-500">Please select a base date and enter a valid number of days.</p>`;
+                resultDiv.classList.remove('hidden');
+                return;
+            }
+
+            const baseDate = new Date(baseDateStr);
+            // Adjust for timezone offset to prevent off-by-one errors
+            baseDate.setMinutes(baseDate.getMinutes() + baseDate.getTimezoneOffset());
+            
+            if (operation === 'add') {
+                baseDate.setDate(baseDate.getDate() + days);
+            } else {
+                baseDate.setDate(baseDate.getDate() - days);
+            }
+
+            const newDateStr = baseDate.toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+
+            resultDiv.innerHTML = `
+                <p class="result-title">New Date:</p>
+                <p class="result-value">${newDateStr}</p>
+            `;
+            resultDiv.classList.remove('hidden');
+        };
+
+        document.getElementById('addDays').addEventListener('click', () => handleDateCalculation('add'));
+        document.getElementById('subtractDays').addEventListener('click', () => handleDateCalculation('subtract'));
+
+        // --- DAY DETAILS ---
+        const handleDetailDateChange = () => {
+            const detailDateStr = document.getElementById('detailDate').value;
+            const resultDiv = document.getElementById('detailResult');
+
+            if (!detailDateStr) {
+                resultDiv.classList.add('hidden');
+                return;
+            }
+
+            const detailDate = new Date(detailDateStr);
+            detailDate.setMinutes(detailDate.getMinutes() + detailDate.getTimezoneOffset());
+
+            const startOfYear = new Date(detailDate.getFullYear(), 0, 0);
+            const diff = detailDate - startOfYear;
+            const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+            const weekNumber = Math.ceil(dayOfYear / 7);
+
+            const isLeap = (year) => (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+            const daysInYear = isLeap(detailDate.getFullYear()) ? 366 : 365;
+
+            resultDiv.innerHTML = `
+                <p><span class="result-value">${dayOfYear}</span> / ${daysInYear} day of the year</p>
+                <p><span class="result-value">${weekNumber}</span> week of the year</p>
+                <p>This is a <span class="result-value">${isLeap(detailDate.getFullYear()) ? 'Leap Year' : 'Common Year'}</span></p>
+            `;
+            resultDiv.classList.remove('hidden');
+        };
+
+        document.getElementById('detailDate').addEventListener('change', handleDetailDateChange);
+
+
+        // --- PWA Installation Logic ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(reg => console.log('Service worker registered.', reg))
+                    .catch(err => console.error('Service worker registration failed:', err));
+            });
+        }
+
+        let deferredPrompt;
+        const installPromptDiv = document.getElementById('install-prompt');
+        const installButton = document.getElementById('install-button');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            // Update UI to show the install button
+            installPromptDiv.style.display = 'block';
+        });
+
+        installButton.addEventListener('click', async () => {
+            // Hide the app provided install promotion
+            installPromptDiv.style.display = 'none';
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            // We've used the prompt, and can't use it again, throw it away
+            deferredPrompt = null;
+        });
+
+        window.addEventListener('appinstalled', () => {
+            // Hide the app-provided install promotion
+            installPromptDiv.style.display = 'none';
+            // Clear the deferredPrompt so it can be garbage collected
+            deferredPrompt = null;
+            console.log('PWA was installed');
+        });
+
+    </script>
+    
+    <!-- These files are virtual. The browser will request them, and the service worker will handle them. -->
+    <!-- In a real project, you would create these two files in the same directory as your HTML file. -->
+    <script>
+        // Virtual service-worker.js
+        // In a real project, this would be in a separate file `service-worker.js`
+        const swContent = `
+            const CACHE_NAME = 'date-toolkit-v1';
+            const ASSETS_TO_CACHE = [
+                '/',
+                'index.html',
+                'https://cdn.tailwindcss.com',
+                'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
+            ];
+
+            self.addEventListener('install', event => {
+                event.waitUntil(
+                    caches.open(CACHE_NAME).then(cache => {
+                        console.log('Caching assets');
+                        return cache.addAll(ASSETS_TO_CACHE);
+                    })
+                );
+            });
+
+            self.addEventListener('fetch', event => {
+                event.respondWith(
+                    caches.match(event.request).then(response => {
+                        return response || fetch(event.request);
+                    })
+                );
+            });
+        `;
+        // This is a trick to make it work in this self-contained environment
+        if (window.location.pathname.endsWith('service-worker.js')) {
+            const response = new Response(swContent, { headers: { 'Content-Type': 'application/javascript' } });
+            self.addEventListener('fetch', e => e.respondWith(response));
+        }
+    </script>
+
+    <script>
+        // Virtual manifest.json
+        // In a real project, this would be in a separate file `manifest.json`
+        const manifestContent = {
+            "name": "Date Toolkit",
+            "short_name": "DateTool",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#f0f4f8",
+            "theme_color": "#4A90E2",
+            "description": "A simple toolkit for date calculations.",
+            "icons": [
+                {
+                    "src": "https://placehold.co/192x192/4A90E2/FFFFFF?text=Date",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                },
+                {
+                    "src": "https://placehold.co/512x512/4A90E2/FFFFFF?text=Date",
+                    "sizes": "512x512",
+                    "type": "image/png"
+                }
+            ]
+        };
+         if (window.location.pathname.endsWith('manifest.json')) {
+            const response = new Response(JSON.stringify(manifestContent), { headers: { 'Content-Type': 'application/json' } });
+            self.addEventListener('fetch', e => e.respondWith(response));
+        }
+    </script>
+
+</body>
+</html>
