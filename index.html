@@ -2,385 +2,819 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- PWA Meta Tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <!-- PWA / iPhone Meta -->
     <title>Date Toolkit</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Date Toolkit">
-    <meta name="theme-color" content="#4A90E2">
-    <link rel="apple-touch-icon" href="https://placehold.co/192x192/4A90E2/FFFFFF?text=Date">
+    <meta name="theme-color" content="#4A90E2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1e293b" media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="https://placehold.co/180x180/4A90E2/FFFFFF?text=DT">
     <link rel="manifest" href="manifest.json">
 
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts -->
+    <!-- Fonts: preconnect + display=swap to avoid render-blocking -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
+        /* ── Reset & Variables ─────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        * { -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --bg:        #f0f4f8;
+            --card:      #ffffff;
+            --text-1:    #1a202c;
+            --text-2:    #4a5568;
+            --text-3:    #718096;
+            --border:    #e2e8f0;
+            --result:    #f8fafc;
+            --accent:    #4A90E2;
+            --accent-h:  #357ABD;
+            --accent-r:  74, 144, 226;
+            --red:       #e53e3e;
+            --green:     #38a169;
+            --green-h:   #2f855a;
+            --safe-t: env(safe-area-inset-top,    0px);
+            --safe-r: env(safe-area-inset-right,  0px);
+            --safe-b: env(safe-area-inset-bottom, 0px);
+            --safe-l: env(safe-area-inset-left,   0px);
+        }
+
+        html.dark {
+            --bg:       #0f172a;
+            --card:     #1e293b;
+            --text-1:   #f1f5f9;
+            --text-2:   #cbd5e0;
+            --text-3:   #94a3b8;
+            --border:   #334155;
+            --result:   #0f172a;
+            --accent:   #60a5fa;
+            --accent-h: #3b82f6;
+            --accent-r: 96, 165, 250;
+        }
+
+        /* ── Base ──────────────────────────────────────────────────────── */
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text-1);
+            min-height: 100vh;
+            /* Safe-area padding for iPhone notch + home indicator */
+            padding-top:    calc(var(--safe-t) + 1rem);
+            padding-right:  calc(var(--safe-r) + 1rem);
+            padding-bottom: calc(var(--safe-b) + 5rem);
+            padding-left:   calc(var(--safe-l) + 1rem);
+            transition: background 0.2s, color 0.2s;
         }
+
+        .container { max-width: 640px; margin: 0 auto; }
+
+        /* ── Header ────────────────────────────────────────────────────── */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .header-left h1 { font-size: 1.75rem; font-weight: 700; }
+        .live-clock { font-size: 0.82rem; color: var(--text-3); margin-top: 0.2rem; }
+        .live-clock span { font-weight: 600; color: var(--accent); }
+
+        .theme-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 2rem;
+            padding: 0.45rem 0.9rem;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--text-2);
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+        .theme-btn:hover { background: var(--border); }
+
+        /* ── Cards ─────────────────────────────────────────────────────── */
         .card {
-            background-color: white;
+            background: var(--card);
             border-radius: 1rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+            transition: background 0.2s;
         }
-        .result-box {
-            background-color: #f8fafc;
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-icon {
+            width: 2rem; height: 2rem;
             border-radius: 0.5rem;
-            padding: 1rem;
-            margin-top: 1rem;
-            border: 1px solid #e2e8f0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
         }
-        .result-title {
+        .card-title { font-size: 1.05rem; font-weight: 700; }
+
+        /* ── Form Elements ─────────────────────────────────────────────── */
+        .field { margin-bottom: 0.75rem; }
+        .label {
+            display: block;
+            font-size: 0.75rem;
             font-weight: 600;
-            color: #4a5568;
+            color: var(--text-3);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.35rem;
         }
-        .result-value {
-            font-weight: 700;
-            color: #4A90E2;
-            font-size: 1.25rem;
+        .input-row { display: flex; gap: 0.5rem; align-items: stretch; }
+
+        /* 16px min to prevent iOS auto-zoom on focus */
+        input[type="date"],
+        input[type="number"],
+        input[type="text"],
+        select {
+            flex: 1;
+            padding: 0.7rem 0.85rem;
+            border: 1.5px solid var(--border);
+            border-radius: 0.6rem;
+            background: var(--result);
+            color: var(--text-1);
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+            min-width: 0;
         }
-        .btn {
-            background-color: #4A90E2;
-            color: white;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            transition: background-color 0.3s;
-        }
-        .btn:hover {
-            background-color: #357ABD;
-        }
-        .input-field {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #cbd5e0;
-            border-radius: 0.5rem;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        .input-field:focus {
+        input:focus, select:focus {
             outline: none;
-            border-color: #4A90E2;
-            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(var(--accent-r), 0.18);
         }
-        #install-prompt {
+
+        .today-btn {
+            flex-shrink: 0;
+            padding: 0 0.75rem;
+            background: var(--result);
+            border: 1.5px solid var(--border);
+            border-radius: 0.6rem;
+            color: var(--accent);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.15s;
+            font-family: inherit;
+        }
+        .today-btn:hover { background: var(--border); }
+
+        select.unit { flex: 0 0 110px; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+        /* ── Buttons ───────────────────────────────────────────────────── */
+        .btn-row { display: flex; gap: 0.6rem; margin-top: 0.75rem; }
+        .btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.6rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: opacity 0.15s, transform 0.1s;
+        }
+        .btn:active { transform: scale(0.97); opacity: 0.85; }
+        .btn-blue  { background: var(--accent); color: #fff; }
+        .btn-blue:hover  { background: var(--accent-h); }
+        .btn-gray  { background: var(--text-3); color: #fff; }
+        .btn-gray:hover  { opacity: 0.85; }
+
+        /* ── Result Box ────────────────────────────────────────────────── */
+        .result-box {
+            background: var(--result);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 0.75rem;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.6rem; right: 0.6rem;
+            padding: 0.25rem 0.55rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 0.4rem;
+            font-size: 0.72rem;
+            color: var(--text-3);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            font-family: inherit;
+        }
+        .copy-btn:hover { background: var(--border); color: var(--text-1); }
+        .copy-btn.copied { color: var(--green); border-color: var(--green); }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 0.75rem;
+            padding-top: 0.5rem;
+        }
+        .stat { text-align: center; }
+        .stat-num {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1.2;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-3);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.15rem;
+        }
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 0.75rem 0;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-blue  { background: rgba(var(--accent-r), 0.15); color: var(--accent); }
+        .badge-green { background: rgba(56,161,105,0.15); color: var(--green); }
+        .detail-row { font-size: 0.85rem; color: var(--text-2); margin-top: 0.4rem; }
+        .detail-row strong { color: var(--accent); }
+        .result-main { font-size: 1.1rem; font-weight: 600; color: var(--accent); }
+
+        /* Countdown grid: 4 items across */
+        .cd-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            padding-top: 0.5rem;
+        }
+        .cd-grid .stat-num { font-size: 1.7rem; }
+
+        /* Empty / error states */
+        .empty { text-align: center; color: var(--text-3); font-size: 0.85rem; padding: 0.25rem 0; }
+        .error { color: var(--red); font-size: 0.875rem; }
+
+        /* ── Install Prompt ────────────────────────────────────────────── */
+        #install-wrap {
             display: none;
             position: fixed;
-            bottom: 1rem;
+            bottom: calc(var(--safe-b) + 1rem);
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
         }
+        #install-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--green);
+            color: #fff;
+            border: none;
+            border-radius: 2rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+            font-family: inherit;
+        }
+        #install-btn:hover { background: var(--green-h); }
+
+        /* ── Responsive ────────────────────────────────────────────────── */
+        @media (max-width: 420px) {
+            .grid-2    { grid-template-columns: 1fr; }
+            .cd-grid   { grid-template-columns: repeat(2, 1fr); }
+            .stat-grid { grid-template-columns: repeat(3, 1fr); }
+        }
     </style>
 </head>
-<body class="p-4 sm:p-6 md:p-8">
+<body>
+<div class="container">
 
-    <div class="max-w-2xl mx-auto">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-800">Date Toolkit</h1>
-            <p class="text-gray-500 mt-2">All your date calculation needs, available offline.</p>
-        </header>
+    <!-- Header -->
+    <header>
+        <div class="header-left">
+            <h1>Date Toolkit</h1>
+            <div class="live-clock" id="liveClock"></div>
+        </div>
+        <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+    </header>
 
-        <!-- Card 1: Date Duration Calculator -->
-        <div class="card">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Date Duration</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label for="startDate" class="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
-                    <input type="date" id="startDate" class="input-field">
+    <!-- ── Card 1: Date Duration ──────────────────────────────────────── -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon" style="background:rgba(74,144,226,.12)">📅</div>
+            <span class="card-title">Date Duration</span>
+        </div>
+        <div class="grid-2">
+            <div class="field">
+                <label class="label" for="startDate">Start Date</label>
+                <div class="input-row">
+                    <input type="date" id="startDate">
+                    <button class="today-btn" onclick="setToday('startDate')">Today</button>
                 </div>
-                <div>
-                    <label for="endDate" class="block text-sm font-medium text-gray-600 mb-1">End Date</label>
-                    <input type="date" id="endDate" class="input-field">
+            </div>
+            <div class="field">
+                <label class="label" for="endDate">End Date</label>
+                <div class="input-row">
+                    <input type="date" id="endDate">
+                    <button class="today-btn" onclick="setToday('endDate')">Today</button>
                 </div>
             </div>
-            <button id="calculateDuration" class="btn mt-4 w-full">Calculate Duration</button>
-            <div id="durationResult" class="result-box hidden"></div>
         </div>
-
-        <!-- Card 2: Add/Subtract Days -->
-        <div class="card">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Add / Subtract Days</h2>
-            <div>
-                <label for="baseDate" class="block text-sm font-medium text-gray-600 mb-1">Base Date</label>
-                <input type="date" id="baseDate" class="input-field">
-            </div>
-            <div class="mt-4">
-                <label for="days" class="block text-sm font-medium text-gray-600 mb-1">Days to Add/Subtract</label>
-                <input type="number" id="days" value="1" class="input-field">
-            </div>
-            <div class="flex space-x-4 mt-4">
-                <button id="addDays" class="btn flex-1">Add Days</button>
-                <button id="subtractDays" class="btn flex-1 bg-gray-600 hover:bg-gray-700">Subtract Days</button>
-            </div>
-            <div id="dateCalcResult" class="result-box hidden"></div>
-        </div>
-
-        <!-- Card 3: Day of the Year -->
-        <div class="card">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Day Details</h2>
-            <div>
-                <label for="detailDate" class="block text-sm font-medium text-gray-600 mb-1">Select Date</label>
-                <input type="date" id="detailDate" class="input-field">
-            </div>
-            <div id="detailResult" class="result-box hidden"></div>
-        </div>
-        
-        <!-- Install button for PWA -->
-        <div id="install-prompt">
-             <button id="install-button" class="btn bg-green-500 hover:bg-green-600 flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                <span>Install App</span>
-            </button>
-        </div>
-
+        <div id="durationResult"><div class="empty">Select two dates to see the duration</div></div>
     </div>
 
-    <script>
-        // Set default dates to today
-        document.addEventListener('DOMContentLoaded', () => {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('startDate').value = today;
-            document.getElementById('endDate').value = today;
-            document.getElementById('baseDate').value = today;
-            document.getElementById('detailDate').value = today;
+    <!-- ── Card 2: Add / Subtract ────────────────────────────────────── -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon" style="background:rgba(56,161,105,.12)">➕</div>
+            <span class="card-title">Add / Subtract</span>
+        </div>
+        <div class="field">
+            <label class="label" for="baseDate">Base Date</label>
+            <div class="input-row">
+                <input type="date" id="baseDate">
+                <button class="today-btn" onclick="setToday('baseDate')">Today</button>
+            </div>
+        </div>
+        <div class="field">
+            <label class="label">Amount &amp; Unit</label>
+            <div class="input-row">
+                <input type="number" id="calcAmt" value="7" min="0" style="max-width:100px">
+                <select id="calcUnit" class="unit">
+                    <option value="days">Days</option>
+                    <option value="weeks">Weeks</option>
+                    <option value="months">Months</option>
+                    <option value="years">Years</option>
+                </select>
+            </div>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-blue" id="addBtn">+ Add</button>
+            <button class="btn btn-gray" id="subBtn">− Subtract</button>
+        </div>
+        <div id="addSubResult"><div class="empty">Choose a date and amount, then tap Add or Subtract</div></div>
+    </div>
 
-            // Trigger initial calculation for Day Details
-            handleDetailDateChange();
-        });
+    <!-- ── Card 3: Day Details ───────────────────────────────────────── -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon" style="background:rgba(159,122,234,.12)">🔍</div>
+            <span class="card-title">Day Details</span>
+        </div>
+        <div class="field">
+            <label class="label" for="detailDate">Date</label>
+            <div class="input-row">
+                <input type="date" id="detailDate">
+                <button class="today-btn" onclick="setToday('detailDate')">Today</button>
+            </div>
+        </div>
+        <div id="detailResult"><div class="empty">Select a date to see details</div></div>
+    </div>
 
-        // --- DURATION CALCULATION ---
-        document.getElementById('calculateDuration').addEventListener('click', () => {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            const resultDiv = document.getElementById('durationResult');
+    <!-- ── Card 4: Age Calculator ────────────────────────────────────── -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon" style="background:rgba(237,137,54,.12)">🎂</div>
+            <span class="card-title">Age Calculator</span>
+        </div>
+        <div class="field">
+            <label class="label" for="birthDate">Birth Date</label>
+            <input type="date" id="birthDate">
+        </div>
+        <div id="ageResult"><div class="empty">Enter a birth date to calculate age</div></div>
+    </div>
 
-            if (!startDate || !endDate) {
-                resultDiv.innerHTML = `<p class="text-red-500">Please select both a start and end date.</p>`;
-                resultDiv.classList.remove('hidden');
-                return;
-            }
+    <!-- ── Card 5: Countdown ─────────────────────────────────────────── -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon" style="background:rgba(229,62,62,.12)">⏳</div>
+            <span class="card-title">Countdown</span>
+        </div>
+        <div class="field">
+            <label class="label" for="cdName">Event Name (optional)</label>
+            <input type="text" id="cdName" placeholder="e.g. New Year, Birthday…">
+        </div>
+        <div class="field">
+            <label class="label" for="cdDate">Target Date</label>
+            <div class="input-row">
+                <input type="date" id="cdDate">
+                <button class="today-btn" onclick="setToday('cdDate')">Today</button>
+            </div>
+        </div>
+        <div id="cdResult"><div class="empty">Set a target date to start countdown</div></div>
+    </div>
 
-            const start = new Date(startDate);
-            const end = new Date(endDate);
+    <!-- Install Prompt (Android/Chrome PWA) -->
+    <div id="install-wrap">
+        <button id="install-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Install App
+        </button>
+    </div>
 
-            if (start > end) {
-                resultDiv.innerHTML = `<p class="text-red-500">Start date cannot be after the end date.</p>`;
-                resultDiv.classList.remove('hidden');
-                return;
-            }
+</div><!-- /container -->
 
-            const diffTime = Math.abs(end - start);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            // Adjust to be inclusive
-            const inclusiveDays = diffDays + 1;
-            const diffWeeks = (inclusiveDays / 7).toFixed(2);
-            
-            // Month calculation is tricky, this is an approximation
-            let diffMonths = (end.getFullYear() - start.getFullYear()) * 12;
-            diffMonths -= start.getMonth();
-            diffMonths += end.getMonth();
-            const monthResult = diffMonths <= 0 ? 0 : diffMonths;
+<script>
+// ── Utilities ───────────────────────────────────────────────────────────────
 
-            resultDiv.innerHTML = `
-                <p class="result-title">Duration:</p>
-                <p><span class="result-value">${inclusiveDays.toLocaleString()}</span> Days</p>
-                <p><span class="result-value">${diffWeeks}</span> Weeks</p>
-                <p><span class="result-value">${monthResult}</span> Full Months (approx.)</p>
-            `;
-            resultDiv.classList.remove('hidden');
-        });
+/** Parse YYYY-MM-DD without timezone offset issues */
+function parseDate(s) {
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d);
+}
 
-        // --- ADD/SUBTRACT DAYS ---
-        const handleDateCalculation = (operation) => {
-            const baseDateStr = document.getElementById('baseDate').value;
-            const days = parseInt(document.getElementById('days').value, 10);
-            const resultDiv = document.getElementById('dateCalcResult');
+function todayStr() {
+    return new Date().toISOString().split('T')[0];
+}
 
-            if (!baseDateStr || isNaN(days)) {
-                resultDiv.innerHTML = `<p class="text-red-500">Please select a base date and enter a valid number of days.</p>`;
-                resultDiv.classList.remove('hidden');
-                return;
-            }
+function setToday(id) {
+    const el = document.getElementById(id);
+    el.value = todayStr();
+    el.dispatchEvent(new Event('change'));
+}
 
-            const baseDate = new Date(baseDateStr);
-            // Adjust for timezone offset to prevent off-by-one errors
-            baseDate.setMinutes(baseDate.getMinutes() + baseDate.getTimezoneOffset());
-            
-            if (operation === 'add') {
-                baseDate.setDate(baseDate.getDate() + days);
-            } else {
-                baseDate.setDate(baseDate.getDate() - days);
-            }
+function isLeap(y) {
+    return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+}
 
-            const newDateStr = baseDate.toLocaleDateString('en-US', {
-                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-            });
+/** ISO 8601 week number */
+function isoWeek(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const day = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - day);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
 
-            resultDiv.innerHTML = `
-                <p class="result-title">New Date:</p>
-                <p class="result-value">${newDateStr}</p>
-            `;
-            resultDiv.classList.remove('hidden');
-        };
+/** Working days between two dates (O(1) algorithm, no loops) */
+function workingDays(start, end) {
+    const startDay = start.getDay();
+    const totalDays = Math.round((end - start) / 86400000) + 1;
+    const fullWeeks = Math.floor(totalDays / 7);
+    let count = fullWeeks * 5;
+    const rem = totalDays % 7;
+    for (let i = 0; i < rem; i++) {
+        const d = (startDay + i) % 7;
+        if (d !== 0 && d !== 6) count++;
+    }
+    return count;
+}
 
-        document.getElementById('addDays').addEventListener('click', () => handleDateCalculation('add'));
-        document.getElementById('subtractDays').addEventListener('click', () => handleDateCalculation('subtract'));
+function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
-        // --- DAY DETAILS ---
-        const handleDetailDateChange = () => {
-            const detailDateStr = document.getElementById('detailDate').value;
-            const resultDiv = document.getElementById('detailResult');
+// Copy text storage (avoids encoding issues in onclick attributes)
+const _copyStore = [];
+function _doCopy(idx, btn) {
+    const text = _copyStore[idx];
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => flash(btn));
+    } else {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        flash(btn);
+    }
+}
+function flash(btn) {
+    btn.textContent = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Copy'; btn.classList.remove('copied'); }, 2000);
+}
 
-            if (!detailDateStr) {
-                resultDiv.classList.add('hidden');
-                return;
-            }
+/** Wrap result HTML in result-box with a copy button */
+function wrapResult(html, copyText) {
+    const idx = _copyStore.push(copyText) - 1;
+    return `<div class="result-box">
+        <button class="copy-btn" onclick="_doCopy(${idx},this)">📋 Copy</button>
+        ${html}
+    </div>`;
+}
 
-            const detailDate = new Date(detailDateStr);
-            detailDate.setMinutes(detailDate.getMinutes() + detailDate.getTimezoneOffset());
+// ── Live Clock ───────────────────────────────────────────────────────────────
 
-            const startOfYear = new Date(detailDate.getFullYear(), 0, 0);
-            const diff = detailDate - startOfYear;
-            const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+function updateClock() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    document.getElementById('liveClock').innerHTML = `${dateStr} &bull; <span>${timeStr}</span>`;
+}
+updateClock();
+setInterval(updateClock, 1000);
 
-            const weekNumber = Math.ceil(dayOfYear / 7);
+// ── Dark Mode ────────────────────────────────────────────────────────────────
 
-            const isLeap = (year) => (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
-            const daysInYear = isLeap(detailDate.getFullYear()) ? 366 : 365;
+const html = document.documentElement;
+const themeBtn = document.getElementById('themeBtn');
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const savedTheme = localStorage.getItem('theme');
 
-            resultDiv.innerHTML = `
-                <p><span class="result-value">${dayOfYear}</span> / ${daysInYear} day of the year</p>
-                <p><span class="result-value">${weekNumber}</span> week of the year</p>
-                <p>This is a <span class="result-value">${isLeap(detailDate.getFullYear()) ? 'Leap Year' : 'Common Year'}</span></p>
-            `;
-            resultDiv.classList.remove('hidden');
-        };
+if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+    html.classList.add('dark');
+    themeBtn.textContent = '☀️';
+}
 
-        document.getElementById('detailDate').addEventListener('change', handleDetailDateChange);
+themeBtn.addEventListener('click', () => {
+    const dark = html.classList.toggle('dark');
+    themeBtn.textContent = dark ? '☀️' : '🌙';
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+});
 
+// ── Date Duration ────────────────────────────────────────────────────────────
 
-        // --- PWA Installation Logic ---
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js')
-                    .then(reg => console.log('Service worker registered.', reg))
-                    .catch(err => console.error('Service worker registration failed:', err));
-            });
-        }
+function calcDuration() {
+    const s = document.getElementById('startDate').value;
+    const e = document.getElementById('endDate').value;
+    const div = document.getElementById('durationResult');
 
-        let deferredPrompt;
-        const installPromptDiv = document.getElementById('install-prompt');
-        const installButton = document.getElementById('install-button');
+    if (!s || !e) { div.innerHTML = '<div class="empty">Select two dates to see the duration</div>'; return; }
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the mini-infobar from appearing on mobile
-            e.preventDefault();
-            // Stash the event so it can be triggered later.
-            deferredPrompt = e;
-            // Update UI to show the install button
-            installPromptDiv.style.display = 'block';
-        });
+    const start = parseDate(s), end = parseDate(e);
+    if (start > end) { div.innerHTML = '<p class="error">Start date cannot be after end date.</p>'; return; }
 
-        installButton.addEventListener('click', async () => {
-            // Hide the app provided install promotion
-            installPromptDiv.style.display = 'none';
-            // Show the install prompt
-            deferredPrompt.prompt();
-            // Wait for the user to respond to the prompt
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response to the install prompt: ${outcome}`);
-            // We've used the prompt, and can't use it again, throw it away
-            deferredPrompt = null;
-        });
+    const totalDays  = Math.round((end - start) / 86400000) + 1;
+    const wDays      = workingDays(start, end);
+    const weekendDays = totalDays - wDays;
+    const weeks      = (totalDays / 7).toFixed(2);
 
-        window.addEventListener('appinstalled', () => {
-            // Hide the app-provided install promotion
-            installPromptDiv.style.display = 'none';
-            // Clear the deferredPrompt so it can be garbage collected
-            deferredPrompt = null;
-            console.log('PWA was installed');
-        });
+    // Accurate month diff: subtract 1 month if end-day < start-day
+    let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    if (end.getDate() < start.getDate()) months--;
+    months = Math.max(0, months);
 
-    </script>
-    
-    <!-- These files are virtual. The browser will request them, and the service worker will handle them. -->
-    <!-- In a real project, you would create these two files in the same directory as your HTML file. -->
-    <script>
-        // Virtual service-worker.js
-        // In a real project, this would be in a separate file `service-worker.js`
-        const swContent = `
-            const CACHE_NAME = 'date-toolkit-v1';
-            const ASSETS_TO_CACHE = [
-                '/',
-                'index.html',
-                'https://cdn.tailwindcss.com',
-                'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
-            ];
+    // Accurate year diff
+    let years = end.getFullYear() - start.getFullYear();
+    if (new Date(start.getFullYear() + years, start.getMonth(), start.getDate()) > end) years--;
+    years = Math.max(0, years);
 
-            self.addEventListener('install', event => {
-                event.waitUntil(
-                    caches.open(CACHE_NAME).then(cache => {
-                        console.log('Caching assets');
-                        return cache.addAll(ASSETS_TO_CACHE);
-                    })
-                );
-            });
+    const copyText = `Duration: ${totalDays} days (${wDays} working, ${weekendDays} weekend) | ${weeks} weeks | ${months} months | ${years} years`;
 
-            self.addEventListener('fetch', event => {
-                event.respondWith(
-                    caches.match(event.request).then(response => {
-                        return response || fetch(event.request);
-                    })
-                );
-            });
-        `;
-        // This is a trick to make it work in this self-contained environment
-        if (window.location.pathname.endsWith('service-worker.js')) {
-            const response = new Response(swContent, { headers: { 'Content-Type': 'application/javascript' } });
-            self.addEventListener('fetch', e => e.respondWith(response));
-        }
-    </script>
+    div.innerHTML = wrapResult(`
+        <div class="stat-grid">
+            <div class="stat"><div class="stat-num">${totalDays.toLocaleString()}</div><div class="stat-label">Total Days</div></div>
+            <div class="stat"><div class="stat-num">${wDays.toLocaleString()}</div><div class="stat-label">Working Days</div></div>
+            <div class="stat"><div class="stat-num">${weekendDays}</div><div class="stat-label">Weekend Days</div></div>
+            <div class="stat"><div class="stat-num">${weeks}</div><div class="stat-label">Weeks</div></div>
+            <div class="stat"><div class="stat-num">${months}</div><div class="stat-label">Months</div></div>
+            <div class="stat"><div class="stat-num">${years}</div><div class="stat-label">Years</div></div>
+        </div>
+    `, copyText);
+}
 
-    <script>
-        // Virtual manifest.json
-        // In a real project, this would be in a separate file `manifest.json`
-        const manifestContent = {
-            "name": "Date Toolkit",
-            "short_name": "DateTool",
-            "start_url": ".",
-            "display": "standalone",
-            "background_color": "#f0f4f8",
-            "theme_color": "#4A90E2",
-            "description": "A simple toolkit for date calculations.",
-            "icons": [
-                {
-                    "src": "https://placehold.co/192x192/4A90E2/FFFFFF?text=Date",
-                    "sizes": "192x192",
-                    "type": "image/png"
-                },
-                {
-                    "src": "https://placehold.co/512x512/4A90E2/FFFFFF?text=Date",
-                    "sizes": "512x512",
-                    "type": "image/png"
-                }
-            ]
-        };
-         if (window.location.pathname.endsWith('manifest.json')) {
-            const response = new Response(JSON.stringify(manifestContent), { headers: { 'Content-Type': 'application/json' } });
-            self.addEventListener('fetch', e => e.respondWith(response));
-        }
-    </script>
+document.getElementById('startDate').addEventListener('change', calcDuration);
+document.getElementById('endDate').addEventListener('change', calcDuration);
 
+// ── Add / Subtract ───────────────────────────────────────────────────────────
+
+let lastOp = 'add';
+
+function calcAddSub(op) {
+    if (op) lastOp = op;
+    const bStr = document.getElementById('baseDate').value;
+    const amt  = parseInt(document.getElementById('calcAmt').value, 10);
+    const unit = document.getElementById('calcUnit').value;
+    const div  = document.getElementById('addSubResult');
+
+    if (!bStr || isNaN(amt) || amt < 0) {
+        div.innerHTML = '<div class="empty">Choose a date and amount, then tap Add or Subtract</div>';
+        return;
+    }
+
+    const base   = parseDate(bStr);
+    const result = new Date(base);
+    const sign   = lastOp === 'add' ? 1 : -1;
+
+    if      (unit === 'days')   result.setDate(result.getDate() + sign * amt);
+    else if (unit === 'weeks')  result.setDate(result.getDate() + sign * amt * 7);
+    else if (unit === 'months') result.setMonth(result.getMonth() + sign * amt);
+    else if (unit === 'years')  result.setFullYear(result.getFullYear() + sign * amt);
+
+    const resultStr  = result.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    const daysDiff   = Math.abs(Math.round((result - base) / 86400000));
+    const opLabel    = lastOp === 'add' ? 'Added' : 'Subtracted';
+    const fromLabel  = base.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+
+    div.innerHTML = wrapResult(`
+        <div class="detail-row">${opLabel} ${amt} ${unit} from ${fromLabel}</div>
+        <div class="result-main" style="margin-top:0.4rem">${resultStr}</div>
+        <div class="detail-row">(${daysDiff.toLocaleString()} days difference)</div>
+    `, resultStr);
+}
+
+document.getElementById('addBtn').addEventListener('click', () => calcAddSub('add'));
+document.getElementById('subBtn').addEventListener('click', () => calcAddSub('subtract'));
+document.getElementById('baseDate').addEventListener('change', () => calcAddSub());
+document.getElementById('calcAmt').addEventListener('input',  () => calcAddSub());
+document.getElementById('calcUnit').addEventListener('change', () => calcAddSub());
+
+// ── Day Details ──────────────────────────────────────────────────────────────
+
+function calcDayDetails() {
+    const s   = document.getElementById('detailDate').value;
+    const div = document.getElementById('detailResult');
+    if (!s) { div.innerHTML = '<div class="empty">Select a date to see details</div>'; return; }
+
+    const d          = parseDate(s);
+    const startOfYear = new Date(d.getFullYear(), 0, 0);
+    const dayOfYear  = Math.floor((d - startOfYear) / 86400000);
+    const daysInYear = isLeap(d.getFullYear()) ? 366 : 365;
+    const remaining  = daysInYear - dayOfYear;
+    const week       = isoWeek(d);
+    const quarter    = Math.ceil((d.getMonth() + 1) / 3);
+    const weekday    = d.toLocaleDateString('en-US', { weekday: 'long' });
+    const leap       = isLeap(d.getFullYear());
+
+    const copyText = `${weekday} — Day ${dayOfYear}/${daysInYear} | ISO Week ${week} | Q${quarter} | ${leap ? 'Leap Year' : 'Common Year'}`;
+
+    div.innerHTML = wrapResult(`
+        <div class="stat-grid">
+            <div class="stat"><div class="stat-num">${dayOfYear}</div><div class="stat-label">Day of Year</div></div>
+            <div class="stat"><div class="stat-num">${remaining}</div><div class="stat-label">Days Left</div></div>
+            <div class="stat"><div class="stat-num">${week}</div><div class="stat-label">ISO Week</div></div>
+            <div class="stat"><div class="stat-num">Q${quarter}</div><div class="stat-label">Quarter</div></div>
+        </div>
+        <hr class="divider">
+        <div style="display:flex;gap:0.4rem;flex-wrap:wrap">
+            <span class="badge badge-blue">${weekday}</span>
+            <span class="badge ${leap ? 'badge-green' : 'badge-blue'}">${leap ? '🗓 Leap Year' : 'Common Year'}</span>
+            <span class="badge badge-blue">${daysInYear} days in year</span>
+        </div>
+    `, copyText);
+}
+
+document.getElementById('detailDate').addEventListener('change', calcDayDetails);
+
+// ── Age Calculator ───────────────────────────────────────────────────────────
+
+function calcAge() {
+    const s   = document.getElementById('birthDate').value;
+    const div = document.getElementById('ageResult');
+    if (!s) { div.innerHTML = '<div class="empty">Enter a birth date to calculate age</div>'; return; }
+
+    const birth = parseDate(s);
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    if (birth > today) { div.innerHTML = '<p class="error">Birth date cannot be in the future.</p>'; return; }
+
+    let yrs = today.getFullYear() - birth.getFullYear();
+    let mos = today.getMonth()    - birth.getMonth();
+    let dys = today.getDate()     - birth.getDate();
+
+    if (dys < 0) {
+        mos--;
+        dys += new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+    }
+    if (mos < 0) { yrs--; mos += 12; }
+
+    const totalDays = Math.round((today - birth) / 86400000);
+
+    let nextBday = new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
+    if (nextBday <= today) nextBday.setFullYear(today.getFullYear() + 1);
+    const daysToNext = Math.round((nextBday - today) / 86400000);
+    const nextBdayStr = nextBday.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+
+    const copyText = `Age: ${yrs} years, ${mos} months, ${dys} days (${totalDays.toLocaleString()} total days). Next birthday: ${nextBdayStr} (in ${daysToNext} days)`;
+
+    div.innerHTML = wrapResult(`
+        <div class="stat-grid">
+            <div class="stat"><div class="stat-num">${yrs}</div><div class="stat-label">Years</div></div>
+            <div class="stat"><div class="stat-num">${mos}</div><div class="stat-label">Months</div></div>
+            <div class="stat"><div class="stat-num">${dys}</div><div class="stat-label">Days</div></div>
+            <div class="stat"><div class="stat-num">${totalDays.toLocaleString()}</div><div class="stat-label">Total Days</div></div>
+        </div>
+        <hr class="divider">
+        <div class="detail-row">🎂 Next birthday: <strong>${nextBdayStr}</strong></div>
+        <div class="detail-row">in <strong>${daysToNext}</strong> days</div>
+    `, copyText);
+}
+
+document.getElementById('birthDate').addEventListener('change', calcAge);
+
+// ── Countdown ────────────────────────────────────────────────────────────────
+
+let cdTimer = null;
+
+function updateCountdown() {
+    const s    = document.getElementById('cdDate').value;
+    const name = escHtml(document.getElementById('cdName').value.trim() || 'Event');
+    const div  = document.getElementById('cdResult');
+
+    if (!s) { div.innerHTML = '<div class="empty">Set a target date to start countdown</div>'; return; }
+
+    const target = parseDate(s);
+    target.setHours(23, 59, 59, 999);
+    const diff = target - Date.now();
+
+    if (diff < 0) {
+        div.innerHTML = wrapResult(
+            `<div style="text-align:center">🎉 <strong>${name}</strong> has already passed!</div>`,
+            `${name} has passed`
+        );
+        return;
+    }
+
+    const totalSec = Math.floor(diff / 1000);
+    const dd = Math.floor(totalSec / 86400);
+    const hh = Math.floor((totalSec % 86400) / 3600);
+    const mm = Math.floor((totalSec % 3600) / 60);
+    const ss = totalSec % 60;
+
+    const copyText = `${name}: ${dd}d ${hh}h ${mm}m ${ss}s remaining`;
+
+    div.innerHTML = wrapResult(`
+        <div class="detail-row" style="text-align:center;margin-bottom:0.5rem">until <strong>${name}</strong></div>
+        <div class="cd-grid">
+            <div class="stat"><div class="stat-num">${dd}</div><div class="stat-label">Days</div></div>
+            <div class="stat"><div class="stat-num">${String(hh).padStart(2,'0')}</div><div class="stat-label">Hours</div></div>
+            <div class="stat"><div class="stat-num">${String(mm).padStart(2,'0')}</div><div class="stat-label">Mins</div></div>
+            <div class="stat"><div class="stat-num">${String(ss).padStart(2,'0')}</div><div class="stat-label">Secs</div></div>
+        </div>
+    `, copyText);
+}
+
+function startCountdown() {
+    if (cdTimer) clearInterval(cdTimer);
+    updateCountdown();
+    if (document.getElementById('cdDate').value) {
+        cdTimer = setInterval(updateCountdown, 1000);
+    }
+}
+
+document.getElementById('cdDate').addEventListener('change', startCountdown);
+document.getElementById('cdName').addEventListener('input',  updateCountdown);
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+    const t = todayStr();
+    ['startDate','endDate','baseDate','detailDate'].forEach(id => {
+        document.getElementById(id).value = t;
+    });
+    calcDuration();
+    calcDayDetails();
+});
+
+// ── PWA Service Worker ────────────────────────────────────────────────────────
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+            .then(r => console.log('SW registered:', r.scope))
+            .catch(e => console.warn('SW failed:', e));
+    });
+}
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('install-wrap').style.display = 'block';
+});
+document.getElementById('install-btn').addEventListener('click', async () => {
+    document.getElementById('install-wrap').style.display = 'none';
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+    }
+});
+window.addEventListener('appinstalled', () => {
+    document.getElementById('install-wrap').style.display = 'none';
+    deferredPrompt = null;
+});
+
+</script>
 </body>
 </html>
